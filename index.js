@@ -9,7 +9,12 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.9pu2i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Allow frontend requests
+    credentials: true, // Allow cookies and authorization headers if needed
+  })
+);
 app.use(express.json());
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -23,22 +28,29 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    await client.connect();
 
     const database = client.db("simpleAuthenticationSystem");
     const usersCollection = database.collection("users");
 
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
-      res.json(result);
+      res.send(result);
     });
 
-    app.post("/users", async(req, res) =>{
-        const user = req.body;
-        const email = { email: user.email };
-        const result = await usersCollection.insertOne(email);
-        res.json(result)
-    })
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      console.log(user.email)
+
+      const query = { email: user.email };
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User already exists", insertedId: null });
+      }
+
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
