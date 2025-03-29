@@ -40,7 +40,7 @@ async function run() {
 
     app.post("/users", async (req, res) => {
       const user = req.body;
-      console.log(user.email)
+      console.log(user.email);
 
       const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
@@ -50,6 +50,31 @@ async function run() {
 
       const result = await usersCollection.insertOne(user);
       res.send(result);
+    });
+
+    // check if a user exists
+    app.get("/check-user", async (req, res) => {
+      try {
+        const { email } = req.query;
+        console.log("recieved email", req.query.email)
+        if (
+          !email ||
+          !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
+        ) {
+          return res.status(400).json({ error: "Invalid email format." });
+        }
+
+        const user = await usersCollection.findOne(
+          { email },
+          { projection: { _id: 1 } }
+        );
+        return res.json({ exists: !!user });
+      } catch (error) {
+        console.error("Error checking user:", error);
+        return res
+          .status(500)
+          .json({ error: "Something went wrong. Please try again later." });
+      }
     });
 
     // Send a ping to confirm a successful connection
