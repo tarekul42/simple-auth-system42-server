@@ -56,7 +56,7 @@ async function run() {
     app.get("/check-user", async (req, res) => {
       try {
         const { email } = req.query;
-        console.log("recieved email", req.query.email)
+        console.log("recieved email", req.query.email);
         if (
           !email ||
           !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
